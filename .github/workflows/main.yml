@@ -17,7 +17,7 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Build APK with Direct Gradle 8.2
+      - name: Build Fullscreen APK
         run: |
           mkdir -p my-app/src/main/assets
           mkdir -p my-app/src/main/java/com/game/app
@@ -29,8 +29,10 @@ jobs:
           cat << 'EOF' > my-app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.game.app">
               <uses-permission android:name="android.permission.INTERNET" />
-              <application android:label="Ark Game">
-                  <activity android:name=".MainActivity" android:exported="true">
+              <application android:label="Ark Game" android:icon="@android:ic_menu_launcher">
+                  <activity android:name=".MainActivity" 
+                            android:exported="true"
+                            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
@@ -40,19 +42,30 @@ jobs:
           </manifest>
           EOF
 
-          # Java Activity
+          # Java Activity بملء الشاشة الكاملة
           cat << 'EOF' > my-app/src/main/java/com/game/app/MainActivity.java
           package com.game.app;
           import android.app.Activity;
           import android.os.Bundle;
           import android.webkit.WebView;
+          import android.webkit.WebSettings;
+          import android.view.Window;
+          import android.view.WindowManager;
 
           public class MainActivity extends Activity {
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+                  requestWindowFeature(Window.FEATURE_NO_TITLE);
+                  getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                  
                   WebView webView = new WebView(this);
-                  webView.getSettings().setJavaScriptEnabled(true);
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setLoadWithOverviewMode(true);
+                  settings.setUseWideViewPort(true);
+                  
                   webView.loadUrl("file:///android_asset/index.html");
                   setContentView(webView);
               }
@@ -94,12 +107,11 @@ jobs:
           include ':my-app'
           EOF
 
-          # تحميل وتثبيت Gradle 8.2 يدوياً لضمان التوافق التام
+          # تحميل وتثبيت Gradle 8.2 وبناء التطبيق
           wget -q https://services.gradle.org/distributions/gradle-8.2-bin.zip
           unzip -q gradle-8.2-bin.zip
           export PATH=$PWD/gradle-8.2/bin:$PATH
 
-          # بناء التطبيق
           cd my-app
           gradle assembleDebug
 
