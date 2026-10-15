@@ -17,27 +17,23 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Create Minimal Android Project
+      - name: Build APK with Native Command
         run: |
-          mkdir -p my-app/app/src/main/java/com/game/app
-          mkdir -p my-app/app/src/main/assets
+          mkdir -p my-app/src/main/assets
+          mkdir -p my-app/src/main/java/com/game/app
           
-          cp *.html my-app/app/src/main/assets/index.html || echo "No html found"
+          # نسخ ملف اللعبة
+          cp *.html my-app/src/main/assets/index.html || echo "No html found"
 
-          cat << 'EOF' > my-app/app/src/main/AndroidManifest.xml
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.game.app">
+          # Manifest
+          cat << 'EOF' > my-app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.game.app">
               <uses-permission android:name="android.permission.INTERNET" />
-              <application
-                  android:allowBackup="true"
-                  android:label="Ark Game"
-                  android:usesCleartextTraffic="true">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true">
+              <application android:label="Ark Game">
+                  <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
@@ -47,30 +43,29 @@ jobs:
           </manifest>
           EOF
 
-          cat << 'EOF' > my-app/app/src/main/java/com/game/app/MainActivity.java
+          # Java Activity
+          cat << 'EOF' > my-app/src/main/java/com/game/app/MainActivity.java
           package com.game.app;
           import android.app.Activity;
           import android.os.Bundle;
           import android.webkit.WebView;
-          import android.webkit.WebSettings;
 
           public class MainActivity extends Activity {
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   WebView webView = new WebView(this);
-                  WebSettings webSettings = webView.getSettings();
-                  webSettings.setJavaScriptEnabled(true);
-                  webSettings.setDomStorageEnabled(true);
+                  webView.getSettings().setJavaScriptEnabled(true);
                   webView.loadUrl("file:///android_asset/index.html");
                   setContentView(webView);
               }
           }
           EOF
 
-          cat << 'EOF' > my-app/app/build.gradle
+          # build.gradle متوافق ومضمون
+          cat << 'EOF' > my-app/build.gradle
           plugins {
-              id 'com.android.application'
+              id 'com.android.application' version '8.1.1'
           }
           android {
               namespace 'com.game.app'
@@ -85,38 +80,28 @@ jobs:
           }
           EOF
 
-          cat << 'EOF' > my-app/build.gradle
-          buildscript {
+          cat << 'EOF' > settings.gradle
+          pluginManagement {
               repositories {
                   google()
                   mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.0'
+                  gradlePluginPortal()
               }
           }
-          allprojects {
+          dependencyResolutionManagement {
               repositories {
                   google()
                   mavenCentral()
               }
           }
+          include ':my-app'
           EOF
 
-          cat << 'EOF' > my-app/settings.gradle
-          rootProject.name = "My Game App"
-          include ':app'
-          EOF
-
-          echo "android.useAndroidX=true" > my-app/gradle.properties
-
-      - name: Build APK with Gradle
-        run: |
-          cd my-app
+          # تشغيل البناء باستخدام النسخة المتوافقة
           gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: game-apk
-          path: my-app/app/build/outputs/apk/debug/app-debug.apk
+          path: my-app/build/outputs/apk/debug/my-app-debug.apk
