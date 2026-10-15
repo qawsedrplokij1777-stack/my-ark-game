@@ -1,0 +1,32 @@
+name: Build Web-to-APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create Web-to-APK Package
+        run: |
+          mkdir -p android_app/app/src/main/assets
+          cp *.html android_app/app/src/main/assets/index.html || true
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VR-Game-APK
+          path: .
