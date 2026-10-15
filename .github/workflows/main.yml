@@ -17,7 +17,7 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Build APK Correctly
+      - name: Build APK with Direct Gradle 8.2
         run: |
           mkdir -p my-app/src/main/assets
           mkdir -p my-app/src/main/java/com/game/app
@@ -94,10 +94,14 @@ jobs:
           include ':my-app'
           EOF
 
-          # إصلاح مشكلة الإصدار عن طريق تحديد إصدار 8.2 المتوافق وتشغيل البناء
+          # تحميل وتثبيت Gradle 8.2 يدوياً لضمان التوافق التام
+          wget -q https://services.gradle.org/distributions/gradle-8.2-bin.zip
+          unzip -q gradle-8.2-bin.zip
+          export PATH=$PWD/gradle-8.2/bin:$PATH
+
+          # بناء التطبيق
           cd my-app
-          gradle wrapper --gradle-version 8.2
-          ./gradlew assembleDebug
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
