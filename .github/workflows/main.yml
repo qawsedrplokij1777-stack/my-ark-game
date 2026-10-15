@@ -17,18 +17,16 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Create Minimal Android Project
         run: |
           mkdir -p my-app/app/src/main/java/com/game/app
           mkdir -p my-app/app/src/main/assets
           
-          # نسخ ملف اللعبة وتحويله إلى index.html تلقائياً
           cp *.html my-app/app/src/main/assets/index.html || echo "No html found"
 
-          # إنشاء ملف الإعدادات AndroidManifest.xml
           cat << 'EOF' > my-app/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
               package="com.game.app">
@@ -49,7 +47,6 @@ jobs:
           </manifest>
           EOF
 
-          # إنشاء ملف تشغيل العرض MainActivity.java
           cat << 'EOF' > my-app/app/src/main/java/com/game/app/MainActivity.java
           package com.game.app;
           import android.app.Activity;
@@ -71,7 +68,6 @@ jobs:
           }
           EOF
 
-          # إنشاء ملف البناء build.gradle للتطبيق
           cat << 'EOF' > my-app/app/build.gradle
           plugins {
               id 'com.android.application'
@@ -89,7 +85,6 @@ jobs:
           }
           EOF
 
-          # إنشاء ملفات الجرودل الأساسية
           cat << 'EOF' > my-app/build.gradle
           buildscript {
               repositories {
@@ -118,8 +113,7 @@ jobs:
       - name: Build APK with Gradle
         run: |
           cd my-app
-          gradle wrapper
-          ./gradlew assembleDebug
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
