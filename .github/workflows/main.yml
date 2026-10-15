@@ -17,10 +17,9 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Build APK with Native Command
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
         run: |
           mkdir -p my-app/src/main/assets
           mkdir -p my-app/src/main/java/com/game/app
@@ -62,7 +61,7 @@ jobs:
           }
           EOF
 
-          # build.gradle متوافق ومضمون
+          # build.gradle
           cat << 'EOF' > my-app/build.gradle
           plugins {
               id 'com.android.application' version '8.1.1'
@@ -97,7 +96,12 @@ jobs:
           include ':my-app'
           EOF
 
-          # تشغيل البناء باستخدام النسخة المتوافقة
+          # قبول التراخيص تلقائياً لتجنب توقف البناء
+          mkdir -p $ANDROID_SDK_ROOT/licenses
+          echo "24333f8a63b6825ea9c5514f83c2829b004d1fb8" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
+          echo "84831b9409646a918e30573bab4c9c91346d8abd" >> $ANDROID_SDK_ROOT/licenses/android-sdk-license
+
+          # تشغيل البناء
           gradle assembleDebug
 
       - name: Upload APK
